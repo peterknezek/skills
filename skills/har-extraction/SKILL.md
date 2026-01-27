@@ -1,8 +1,9 @@
+---
+name: har-extraction
+description: Extract JSON mocks from HAR files and integrate with MSW for testing and Storybook. Use when working with network recordings or API mocking.
+---
+
 # HAR Extraction & Mock Generation Skill
-
-## Description
-
-This skill enables the extraction of JSON mock files from HAR (HTTP Archive) files and their integration with Mock Service Worker (MSW) for use in development, testing, and Storybook environments.
 
 ## Triggers
 
