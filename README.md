@@ -9,6 +9,7 @@ Skills are markdown files that give AI agents specialized knowledge and workflow
 
 | Skill | Description | Triggers |
 |-------|-------------|----------|
+| [har-extraction](./skills/har-extraction/SKILL.md) | Extract JSON mocks from HAR files and integrate with MSW for testing and Storybook | HAR files, API mocking, MSW setup, Storybook integration, network traffic recording |
 
 
 ## Installation
@@ -41,15 +42,20 @@ cp -r skills/skills/* .claude/skills/
 
 ## Usage
 
-Once installed, just ask Claude Code to help with marketing tasks:
+Once installed, just ask Claude Code to help with relevant tasks:
 
 ```
-"Something"
-→ Uses one-skill skill
+"Extract mocks from this HAR file for my API tests"
+→ Uses har-extraction skill
+```
+
+```
+"Set up MSW with mocks from network recordings"
+→ Uses har-extraction skill
 ```
 
 You can also invoke skills directly:
 
 ```
-/one-skill
+/har-extraction
 ```
