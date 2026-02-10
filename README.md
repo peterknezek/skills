@@ -10,6 +10,9 @@ Skills are markdown files that give AI agents specialized knowledge and workflow
 | Skill | Description | Triggers |
 |-------|-------------|----------|
 | [har-extraction](./skills/har-extraction/SKILL.md) | Extract JSON mocks from HAR files and integrate with MSW for testing and Storybook | HAR files, API mocking, MSW setup, Storybook integration, network traffic recording |
+| [story-naming](./skills/story-naming/SKILL.md) | Naming conventions for Storybook stories describing user scenarios and component states | Creating stories, naming story exports, reviewing story names in PRs |
+| [storybook-interactions](./skills/storybook-interactions/SKILL.md) | Best practices for writing Storybook play functions and interaction tests | Play functions, interaction testing, Storybook test structure, reviewing play functions in PRs |
+| [coding-style](./skills/coding-style/SKILL.md) | JavaScript and TypeScript coding style conventions for clean, maintainable code | Writing JS/TS code, code style reviews, variable/function/module conventions |
 
 
 ## Installation
@@ -50,12 +53,25 @@ Once installed, just ask Claude Code to help with relevant tasks:
 ```
 
 ```
-"Set up MSW with mocks from network recordings"
-→ Uses har-extraction skill
+"Create stories for the UserProfile component"
+→ Uses story-naming skill
+```
+
+```
+"Add a play function to test the login form"
+→ Uses storybook-interactions skill
+```
+
+```
+"Review this code for style issues"
+→ Uses coding-style skill
 ```
 
 You can also invoke skills directly:
 
 ```
 /har-extraction
+/story-naming
+/storybook-interactions
+/coding-style
 ```
