@@ -1,11 +1,11 @@
 ---
 name: coding-style
-description: Use when writing JavaScript or TypeScript code, reviewing code style in pull requests, or checking adherence to the Epic Programming Style Guide. Covers variables, functions, modules, types, React patterns, and testing conventions.
+description: Use when writing JavaScript or TypeScript code, reviewing code style in pull requests, or checking adherence to coding style conventions. Covers variables, functions, modules, types, React patterns, and testing conventions.
 ---
 
 # JavaScript & TypeScript Coding Style
 
-Opinionated style guide based on the [Epic Programming Style Guide](https://www.epicweb.dev/principles) for writing code that is easy to understand, maintain, and scale.
+Opinionated style guide for writing code that is easy to understand, maintain, and scale.
 
 ## Quick Rules
 
@@ -33,7 +33,7 @@ let count = 0
 count += 1
 
 // UPPER_CASE for true constants across files
-const BASE_URL = 'https://epicweb.dev'
+const BASE_URL = 'https://example.com'
 const DEFAULT_PORT = 3000
 
 // Descriptive names - no single letters (except small loops)

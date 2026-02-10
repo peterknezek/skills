@@ -1,6 +1,6 @@
 # JavaScript & TypeScript Coding Style Reference
 
-Complete reference based on the [Epic Programming Style Guide](https://www.epicweb.dev/principles) for writing clean, maintainable JavaScript and TypeScript.
+Complete reference for writing clean, maintainable JavaScript and TypeScript.
 
 ## Table of Contents
 
@@ -66,7 +66,7 @@ const e = true
 For truly constant values used across files, use uppercase with underscores:
 
 ```tsx
-const BASE_URL = 'https://epicweb.dev'
+const BASE_URL = 'https://example.com'
 const DEFAULT_PORT = 3000
 ```
 
@@ -1236,8 +1236,6 @@ Use this checklist when reviewing JavaScript/TypeScript code in pull requests.
 
 ## Related Resources
 
-- [Epic Programming Style Guide](https://www.epicweb.dev/principles)
-- [Epic Web Config](https://github.com/epicweb-dev/config)
 - [Naming Cheatsheet](https://github.com/kettanaito/naming-cheatsheet)
 - [Array Types in TypeScript](https://tkdodo.eu/blog/array-types-in-type-script)
 - [Pure Modules](https://kentcdodds.com/blog/pure-modules)
