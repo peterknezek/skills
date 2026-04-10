@@ -1,5 +1,6 @@
 ---
 name: story-naming
+user-invocable: false
 description: Use when creating Storybook stories, naming story exports, organizing story files, or reviewing story naming conventions. Ensures story names describe user scenarios and component states rather than implementation details.
 ---
 
