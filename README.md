@@ -9,7 +9,7 @@ Skills are markdown files that give AI agents specialized knowledge and workflow
 
 | Skill | Description | Triggers |
 |-------|-------------|----------|
-| [har-extraction](./skills/har-extraction/SKILL.md) | Extract JSON mocks from HAR files and integrate with MSW for testing and Storybook | HAR files, API mocking, MSW setup, Storybook integration, network traffic recording |
+| [har-extraction](./skills/har-extraction/SKILL.md) | Extract JSON mocks from HAR files with har-to-mocks and serve them via MSW (dev, Storybook, tests) or Chrome DevTools Local Overrides | HAR files, API mocking, MSW setup, Storybook integration, Chrome overrides, bug reproduction from a HAR |
 
 
 ## Installation
