@@ -1,6 +1,6 @@
 ---
 name: har-extraction
-description: Use when user has a HAR file and wants to create API mocks, or when setting up MSW mocking for tests/Storybook from network recordings.
+description: Use when the user has a HAR file (browser network recording) and wants JSON API mocks, MSW handlers for tests/Storybook/local dev, Chrome DevTools Local Overrides, or to reproduce a bug from a recorded session.
 dependencies:
   - har-to-mocks
   - mocks-to-msw
@@ -9,138 +9,108 @@ dependencies:
 
 # HAR Extraction & Mock Generation
 
-Extract JSON mocks from HAR files and integrate with MSW for testing and Storybook.
-
-## Workflow
+Turn a HAR file into real-response mocks with [har-to-mocks](https://peterknezek.github.io/har-to-mocks/) (v3, Node.js ≥ 22), then serve them with MSW via mocks-to-msw, or with Chrome DevTools Local Overrides.
 
 ```
-HAR File → har-to-mocks → JSON Mocks → mocks-to-msw → MSW Handlers → Storybook/Tests
+HAR → har-to-mocks → <dir>/<url path>/<METHOD>.json → mocks-to-msw → MSW → app / Storybook / tests
+                   └ --format=chrome-overrides → <dir>/<host>/<path> → Chrome Sources → Overrides
 ```
 
-## Quick Start
+## Agent workflow (non-interactive)
 
-### 1. Extract mocks from HAR file
+`--interactive` needs a real terminal. As an agent, use the list → select → dry run → write loop instead:
 
 ```bash
-npx har-to-mocks recording.har ./src/mocks --interactive
+# 1. List matching requests. No output folder = nothing is written.
+npx har-to-mocks recording.har --url=/api
+
+# 2. Preview: Status column (create / update / skip) and folder tree
+npx har-to-mocks recording.har ./src/mocks/api --url=/api --dry-run
+
+# 3. Optional: keep only some rows, using the numbers from the # column
+npx har-to-mocks recording.har ./src/mocks/api --url=/api --select=1,3,5-7 --dry-run
+
+# 4. Write: same command without --dry-run
+npx har-to-mocks recording.har ./src/mocks/api --url=/api --select=1,3,5-7
 ```
 
-### 2. Generate type-safe imports
+Rules:
+- Always dry-run first and show the user the table. Rows marked `update` overwrite existing files.
+- `--select` numbers refer to the list produced by the **same** `--url`, `--method` and `--type` filters. Re-list if you change filters.
+- Rows marked `skip` share a path and method with a later row (for example `?page=1` and `?page=2`). Only the last one is written unless you `--select` the one you want. Use the Query column to tell them apart.
+- If the user is at a terminal and wants to pick by eye, suggest they run `--interactive` themselves. It prints the equivalent `--select` value for repeat runs.
+
+## Filters and defaults
+
+| Flag | Values | Default |
+|------|--------|---------|
+| `-u, --url` | case-sensitive **substring** of the full URL, query included (not a regex) | all |
+| `-m, --method` | `GET` `POST` `PUT` `DELETE` `PATCH`, repeatable: `-m GET -m POST` | `GET` |
+| `-t, --type` | `xhr` `fetch` `document`, **one value only** | `xhr` |
+| `-f, --format` | `mocks` `chrome-overrides` | `mocks` |
+| `-s, --select` | rows by `#`: `1,3,5-7`, repeatable | all |
+| `-i, --interactive` | checkbox picker with JSON preview | off |
+| `--dry-run` | show table + tree, write nothing | off |
+
+"I don't see my requests": the defaults are GET + xhr. Add `--type=fetch` and/or `--method=POST`. Chrome records `fetch()` calls as `fetch` and XMLHttpRequest/axios calls as `xhr`. For both types, run once per type into the same folder.
+
+## Pick the recipe by use case
+
+| User says | Command | Then |
+|-----------|---------|------|
+| "Backend isn't ready / is down / is behind a VPN" | `npx har-to-mocks staging.har ./src/mocks/api --url=/api --dry-run` | MSW in dev (see below) |
+| "Mocks for Storybook" | `npx har-to-mocks file.har ./src/mocks/api --url=/api` | Storybook setup in [REFERENCE.md](./REFERENCE.md#storybook-integration) |
+| "Fixtures for Vitest / Jest / RTL / Playwright / Cypress" | `npx har-to-mocks file.har ./src/mocks/api --url=/api -m GET -m POST` | `setupServer` in [REFERENCE.md](./REFERENCE.md#node-tests-vitest--jest) |
+| "QA attached a HAR to the ticket" | list → find the failing call → `--select=<n>` | Replay it in a story or test |
+| "Debug production without a deploy" / "show designers real data" | `npx har-to-mocks prod.har ./overrides --format=chrome-overrides --dry-run` | Chrome **Sources → Overrides → Select folder for overrides**, then reload |
+| "Stable data for demos" | `npx har-to-mocks golden-demo.har ./demo/mocks/api --url=/api` | MSW in the demo build |
+| "Same endpoint, different query params" | `--select` the one you want, or use `chrome-overrides` (one file per query string) | |
+
+## Output formats
+
+**`mocks` (default)**: `<output>/<url path>/<METHOD>.json`. The file holds only the raw response body (no headers, no status). Example: `GET /api/users/42` → `src/mocks/api/api/users/42/GET.json`. Paths are concrete, so there are no `:id` patterns.
+
+**`chrome-overrides`**: `<output>/<host>/<path>`, with the query string kept in the file name. Chrome matches by URL only, so GET and POST to one URL share a file. Overrides always return status 200 with the real response headers. A path can't be both a file and a folder (`/api/users` and `/api/users/1` conflict). Binary bodies are decoded. Point DevTools at the exact folder that was written.
+
+## MSW via mocks-to-msw
 
 ```bash
-npx mocks-to-msw generate ./src/mocks
+npm install -D msw mocks-to-msw
+npx msw init ./public --save
+npx -p mocks-to-msw generate-mocks --folder=src/mocks/api --output=src/mocks/mocks.ts
 ```
 
-### 3. Create handlers
+Use the same folder for har-to-mocks output and `--folder`. The generated keys (`'/api/users/GET'`) then match the real URL paths. Re-run `generate-mocks` after every extraction.
 
 ```typescript
 // src/mocks/handlers.ts
 import { createMockHandler } from 'mocks-to-msw';
-import { mocks } from './mocks';
+import mocks from './mocks';
 
-export const { mock, handlers } = createMockHandler<keyof typeof mocks>({
+// createMockHandler returns only { mock }. Build the handlers array yourself.
+export const { mock } = createMockHandler<keyof typeof mocks>({
   mocks,
   debug: true,
+  // origin: 'https://api.example.com', // needed when the app calls an absolute URL
 });
+
+export const handlers = [
+  mock.get('/api/users'),
+  mock.post('/api/users', (data) => ({ ...data, id: 'new-id' })),
+];
 ```
 
-### 4. Initialize MSW
+mocks-to-msw supports GET, POST, PUT and DELETE. `PATCH.json` files are skipped by `generate-mocks`, so write a plain MSW `http.patch` handler for those.
 
-```bash
-npx msw init ./public --save
-```
+## Safety
 
-## Examples
+- HAR files contain cookies, auth headers and tokens. The mock files keep response bodies only, but those can still contain personal data. Review the output before committing it, and don't commit the `.har` itself.
+- Without an output folder, nothing is written. With one, prefer `--dry-run` first.
+- Errors such as `File not found`, `File is not valid JSON` and `File is not a valid HAR file (missing "log.entries")` mean a wrong path or a file that isn't a HAR export. If the mock files come out empty, the HAR was saved without response bodies. Re-export it from the Network tab with content.
 
-### Example 1: Extract mocks from HAR
+## Known limits
 
-**User:** "I have a network.har file, extract the API mocks from it"
+- **GraphQL**: all operations hit one path + method and collide. Use `--select` to keep one. Operation splitting is not implemented.
+- **Query variants** in `mocks` format: one file per path + method. Choose with `--select`.
 
-**Action:**
-```bash
-npx har-to-mocks network.har ./src/mocks --interactive
-npx mocks-to-msw generate ./src/mocks
-```
-
-**Output:** "Extracted 12 endpoints to ./src/mocks and generated mocks.ts registry."
-
----
-
-### Example 2: Setup MSW for Storybook
-
-**User:** "Set up the mocks to work with Storybook"
-
-**Action:**
-1. Install addon: `npm install msw-storybook-addon --save-dev`
-2. Add to `.storybook/main.ts`:
-   ```typescript
-   addons: ['msw-storybook-addon'],
-   staticDirs: ['../public'],
-   ```
-3. Configure `.storybook/preview.tsx`:
-   ```typescript
-   import { initialize, mswLoader } from 'msw-storybook-addon';
-   import { handlers } from '../src/mocks/handlers';
-
-   initialize();
-
-   export default {
-     parameters: { msw: { handlers } },
-     loaders: [mswLoader],
-   };
-   ```
-
-**Output:** "Configured MSW addon for Storybook. Mocks are now active in all stories."
-
----
-
-### Example 3: Filter specific endpoints
-
-**User:** "Extract only POST requests to /api/users from the HAR"
-
-**Action:**
-```bash
-npx har-to-mocks recording.har ./src/mocks --url "/api/users" --method POST
-```
-
-**Output:** "Extracted POST /api/users endpoint to ./src/mocks/api/users/POST.json"
-
----
-
-### Example 4: Override mocks in a story
-
-**User:** "I want to show an error state in my UserList story"
-
-**Action:** Add to story file:
-```typescript
-export const WithError: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        http.get('*/api/users', () => HttpResponse.json(null, { status: 500 })),
-      ],
-    },
-  },
-};
-```
-
-**Output:** "Added error handler override. The story now displays the error state."
-
-## CLI Reference
-
-| Command | Description |
-|---------|-------------|
-| `npx har-to-mocks <har> <output> --interactive` | Interactive endpoint selection |
-| `npx har-to-mocks <har> <output> --url <pattern>` | Filter by URL |
-| `npx har-to-mocks <har> <output> --method <GET\|POST\|...>` | Filter by HTTP method |
-| `npx har-to-mocks <har> <output> --dry-run` | Preview without writing |
-| `npx mocks-to-msw generate <mocks-dir>` | Generate type-safe imports |
-
-## More Information
-
-See [REFERENCE.md](./REFERENCE.md) for detailed documentation including:
-- Recording HAR files from browser DevTools
-- Full CLI options and output structure
-- Complete MSW setup for browser and Node
-- Storybook integration details
-- Troubleshooting guide
+See [REFERENCE.md](./REFERENCE.md) for recording HARs in Chrome/Firefox/Safari, full output samples, MSW browser/Node/Storybook setup, and troubleshooting.
