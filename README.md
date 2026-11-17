@@ -10,6 +10,7 @@ Skills are markdown files that give AI agents specialized knowledge and workflow
 | Skill | Description | Triggers |
 |-------|-------------|----------|
 | [har-extraction](./skills/har-extraction/SKILL.md) | Extract JSON mocks from HAR files with har-to-mocks and serve them via MSW (dev, Storybook, tests) or Chrome DevTools Local Overrides | HAR files, API mocking, MSW setup, Storybook integration, Chrome overrides, bug reproduction from a HAR |
+| [git-conventions](./skills/git-conventions/SKILL.md) | Commit message (`<type>(<taskId>): <description>`) and branch name (`<type>/<taskId>_<description>`) format for Jira (`ABC-123`) and GitHub (`#42`) issue IDs | Running `git commit`, creating a branch (`git checkout -b`, `git switch -c`, `git worktree add -b`). Applied automatically, not slash-invocable |
 
 
 ## Installation
@@ -23,7 +24,7 @@ Use [skills](https://github.com/vercel-labs/skills) to install skills directly:
 npx skills add peterknezek/skills
 
 # Install specific skills
-npx skills add peterknezek/skills --skill har-extraction second-skill
+npx skills add peterknezek/skills --skill har-extraction git-conventions
 
 # List available skills
 npx skills add peterknezek/skills --list
@@ -52,6 +53,11 @@ Once installed, just ask Claude Code to help with relevant tasks:
 ```
 "Set up MSW with mocks from network recordings"
 → Uses har-extraction skill
+```
+
+```
+"Commit this" / "Create a branch for ABC-123"
+→ Uses git-conventions skill
 ```
 
 You can also invoke skills directly:

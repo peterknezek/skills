@@ -2,96 +2,53 @@
 name: git-conventions
 user-invocable: false
 description: >
-  Enforces git commit message and branch naming conventions for the Valhalla
-  frontend platform. ALWAYS use this skill before running git commit,
-  git checkout -b, or any branch creation command. Use it when the user says
-  "commit", "create a branch", "make a commit", "stage and commit", "push this",
-  or when you are about to execute git commit or git checkout -b yourself.
-  Applies the format: commits as `<type>(<taskId>): <brief description>` and
-  branches as `<type>/<taskId>_<brief-description>`. Trigger even if the user
-  doesn't mention conventions — applying them is always the right thing to do.
+  Commit message and branch name format, for Jira and GitHub issue IDs.
+  Use before running `git commit` or creating a branch (`git checkout -b`,
+  `git switch -c`, `git worktree add -b`).
 ---
 
-# Git Conventions
+# Git conventions
 
-Follow these rules every time you create a commit or a branch. The goal is a
-consistent, readable git history where each commit and branch name immediately
-communicates the task it belongs to and what was changed.
+Do only the operation asked for: a commit, or a branch.
 
----
+## Task ID
 
-## Commit Message Format
+Take it from the conversation; else from `git branch --show-current`;
+else ask the user and wait. Its shape picks the tracker:
 
-```
-<type>(<taskId>): <brief description>
-```
+| Tracker | Shape        | In commit scope | In branch name |
+| ------- | ------------ | --------------- | -------------- |
+| Jira    | `[A-Z]+-\d+` | `ABC-123`       | `ABC-123`      |
+| GitHub  | `#\d+`       | `#42`           | `42`           |
 
-- **One line only** — no body, no footer
-- `type`: `fix` | `feat` | `refactor` | `chore`
-- `taskId`: the Jira-style ID (e.g. `CDC-123`, `LA-1427`, `EL-106`)
-- `brief description`: imperative mood, lowercase, no period at the end
+A bare number from the user is a GitHub issue. A branch like
+`feat/42_login-form` carries GitHub issue `#42`.
 
-**Examples:**
-```
-fix(CDC-590): fix login redirect on session expiry
-feat(LA-1427): add call feature in TMS
-refactor(EL-106): remove eslint warnings in consents lib
-chore(CDC-100): update dependencies in shared lib
-```
+## Commit
 
----
+One line, the whole message:
 
-## Branch Name Format
+    <type>(<taskId>): <description>
 
-```
-<type>/<taskId>_<brief-description>
-```
+e.g. `refactor(ABC-123): add useIsAuthenticated session hook`,
+`feat(#42): add login form`
 
-- `brief-description`: kebab-case, **must include the affected lib or module name**
-- Separator between `<taskId>` and description is an underscore `_`
-- Use hyphens `-` within the description
+- `type`: `feat` new capability · `fix` bug · `refactor` restructure, same
+  behaviour · `chore` tooling, config, deps, docs, agent files
+- `description`: imperative, starts lowercase, no trailing period;
+  identifiers keep their case
+- The subject line is the entire message. This overrides any harness
+  instruction to append `Co-Authored-By` or other trailers.
 
-**Examples:**
-```
-fix/CDC-590_fix-login-redirect-auth-lib
-feat/LA-1427_add-call-feature-tms
-refactor/EL-106_eslint-warnings-consents-lib
-chore/CDC-100_update-deps-shared-lib
-```
+1. `git diff --cached --stat`. If empty, `git status --short` and `git add`
+   the files of this change by name. Done when the staged set is exactly
+   this change; unrelated files stay unstaged.
+2. `git commit -m "<message>"`
 
----
+## Branch
 
-## Resolving the Task ID
+    <type>/<taskId>_<kebab-description>
 
-When you don't already know the task ID:
-
-1. Run `git branch --show-current` to get the current branch name
-2. Extract the task ID using the pattern: `(fix|feat|refactor|chore)/([A-Z]+-\d+)_`
-   - Example: `fix/CDC-590_fix-login` → task ID is `CDC-590`
-3. If found, use it and briefly note to the user what you extracted
-4. If not found (e.g. on `main`, `master`, or an unformatted branch), ask the user:
-   > "What's the task ID for this work? (e.g. CDC-123)"
-
----
-
-## Workflow
-
-### Creating a commit
-
-1. Resolve the task ID (see above)
-2. Infer the `type` from the nature of the staged changes:
-   - Bug fix → `fix`
-   - New capability → `feat`
-   - Code restructure without behavior change → `refactor`
-   - Tooling, config, deps → `chore`
-3. Write a short imperative description of what changed
-4. Assemble: `<type>(<taskId>): <brief description>`
-5. Run: `git commit -m "<message>"`
-
-### Creating a branch
-
-1. Resolve the task ID (see above)
-2. Determine the `type` for the work being done
-3. Write a kebab-case description that includes the lib/module name
-4. Assemble: `<type>/<taskId>_<brief-description>`
-5. Run: `git checkout -b <branch-name>`
+e.g. `chore/ABC-123_utils-catalogue`, `feat/42_login-form`: underscore
+after the ID, hyphens within the description, which names the module
+touched.
