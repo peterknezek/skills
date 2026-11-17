@@ -42,6 +42,16 @@ git clone https://github.com/peterknezek/skills.git
 cp -r skills/skills/* .claude/skills/
 ```
 
+### Project setup for adding-a-util
+
+The skill only triggers when the agent is about to write a helper. To make the agent check the utils catalogue earlier, add this pointer to your project's `AGENTS.md` (or `CLAUDE.md`), adjusting the path and helper kinds to your repo:
+
+```markdown
+# Agent guide
+
+- **Utils**: before writing a formatting, date, validation, copy or loan-state helper, look it up in the [utils catalogue](src/utils/README.md); most already exist.
+```
+
 ## Usage
 
 Once installed, just ask Claude Code to help with relevant tasks:
