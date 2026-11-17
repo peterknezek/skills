@@ -11,6 +11,7 @@ Skills are markdown files that give AI agents specialized knowledge and workflow
 |-------|-------------|----------|
 | [har-extraction](./skills/har-extraction/SKILL.md) | Extract JSON mocks from HAR files with har-to-mocks and serve them via MSW (dev, Storybook, tests) or Chrome DevTools Local Overrides | HAR files, API mocking, MSW setup, Storybook integration, Chrome overrides, bug reproduction from a HAR |
 | [git-conventions](./skills/git-conventions/SKILL.md) | Commit message (`<type>(<taskId>): <description>`) and branch name (`<type>/<taskId>_<description>`) format for Jira (`ABC-123`) and GitHub (`#42`) issue IDs | Running `git commit`, creating a branch (`git checkout -b`, `git switch -c`, `git worktree add -b`). Applied automatically, not slash-invocable |
+| [adding-a-util](./skills/adding-a-util/SKILL.md) | Decide whether a helper belongs in the shared utils folder (reused and pure) or beside its caller, following the repo's utils catalogue (its README, written first if missing), then add it test-first with JSDoc and a catalogue row | Writing or extracting a helper (formatting, dates, parsing, predicates over API data) in a page or component, adding to the utils folder |
 
 
 ## Installation
@@ -58,6 +59,11 @@ Once installed, just ask Claude Code to help with relevant tasks:
 ```
 "Commit this" / "Create a branch for ABC-123"
 → Uses git-conventions skill
+```
+
+```
+"Extract this date formatting into a util"
+→ Uses adding-a-util skill
 ```
 
 You can also invoke skills directly:
